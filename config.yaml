@@ -1,0 +1,6 @@
+azure-config:
+  deployment: gpt-4o-mini
+  model: gpt-4o-mini
+  api_version: 2024-12-01-preview
+  endpoint: https://${AZURE_ENDPOINT_DOMAIN}.openai.azure.com/
+  auth_key: ${AZURE_AUTHENTICATION_KEY}
