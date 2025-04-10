@@ -25,19 +25,19 @@ if prompt := st.chat_input("What is up?"):
 
     with st.chat_message("assistant"):
         response = st.write_stream(
-            agent.get_stream_response(prompt))
+            agent.get_stream_response(st.session_state.messages))
 
     st.session_state.messages.append(
         {"role": "assistant", "content": response})
 
-# async def main():
-#     result = await az_model_client.create([UserMessage(content="What is the capital of Taiwan?", source="user")])
-#     print(result)
-#     await az_model_client.close()
+    # if __name__ == "__main__":
+    #     config = Config("config.yaml")
+    #     az_model_client = config.get_azure_model_client()
+    #     agent = Agent(az_model_client)
+    #     asyncio.run(agent.assistant_run_stream("What is the capital of Taiwan?"))
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
-#     config = Config("config.yaml")
-#     az_model_client = config.get_azure_model_client()
-#     agent = Agent(az_model_client)
-#     asyncio.run(agent.assistant_run_stream())
+    #     async def consume_memory_context():
+    #         async for context in agent.get_memory_context():
+    #             print(context)
+
+    #     asyncio.run(consume_memory_context())
