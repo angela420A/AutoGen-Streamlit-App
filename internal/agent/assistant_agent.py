@@ -26,6 +26,23 @@ class Agent:
             system_message="You ara an assistant that helps the user to find the information they need.",
         )
 
+    async def get_memory_context(self):
+        messages = await self.agent._model_context.get_messages()
+        yield messages
+
+    def set_text_message(self, content: str, source: str):
+        return TextMessage(
+            content=content,
+            source=source
+        )
+
+    def set_history_messages(self, history: list):
+        history_messages = []
+        for h in history:
+            history_messages.append(self.set_text_message(
+                h["content"], h["role"]))
+        return history_messages
+
     async def assistant_run(self) -> None:
         response = await self.agent.on_messages(
             [TextMessage(
@@ -34,20 +51,21 @@ class Agent:
         )
         print(response)
 
-    async def assistant_run_stream(self) -> None:
+    async def assistant_run_stream(self, msg: str) -> None:
         await Console(
             self.agent.on_messages_stream(
                 [TextMessage(
-                    content="Find information on AutoGen", source="user")],
+                    content=msg, source="user")],
                 cancellation_token=CancellationToken(),
             ),
             output_stats=True,  # Enable stats printing.
         )
 
-    async def get_stream_response(self, messages):
+    async def get_stream_response(self, sessiion: list):
+        history = self.set_history_messages(sessiion)
+
         async for message in self.agent.on_messages_stream(
-            [TextMessage(
-                content=messages, source="user")],
+            history,
             cancellation_token=CancellationToken(),
         ):
             if isinstance(message, Response):
