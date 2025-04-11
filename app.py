@@ -1,4 +1,5 @@
 import asyncio
+from io import BytesIO
 
 import streamlit as st
 from autogen_core.models import UserMessage
@@ -12,6 +13,8 @@ agent = Agent(az_model_client)
 
 st.title("Erhol Bot")
 
+st.session_state.file_type = None
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -19,9 +22,25 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+file_type = st.radio(
+    "Select the type of file you want to upload",
+    ["pdf", "png", "jpg", "None"],
+    index=None
+)
+
+if file_type == "png" or file_type == "jpg" or file_type == "pdf":
+    st.session_state.file_type = file_type
+    uploaded_file = st.file_uploader(
+        "Choose only jpg, png of pdf file", type=["jpg", "png", "pdf"])
+else:
+    st.session_state.file_type = None
+
 if prompt := st.chat_input("What is up?"):
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
+
+    if uploaded_file is not None:
+        bytes_data = uploaded_file.getvalue()
 
     with st.chat_message("assistant"):
         response = st.write_stream(
