@@ -20,11 +20,12 @@ class Config:
         return self.az_model_client
 
     def load_azure_config(self, config_file_path):
-        with open(config_file_path, 'r') as f:
+        with open(config_file_path, "r") as f:
             content = f.read()
 
-        content = re.sub(r'\$\{([^}^{]+)\}',
-                         lambda m: os.environ.get(m.group(1), ""), content)
+        content = re.sub(
+            r"\$\{([^}^{]+)\}", lambda m: os.environ.get(m.group(1), ""), content
+        )
         self.config = yaml.safe_load(content)
 
     def set_azure_config(self):

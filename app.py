@@ -13,41 +13,42 @@ agent = Agent(az_model_client)
 
 st.title("Erhol Bot")
 
-st.session_state.file_type = None
+st.session_state._file_type = None
+st.session_state._update_logger = None
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+file_type = st.radio(
+    "Select the type of file you want to upload",
+    ["pdf", "png/jpg", "None"],
+    index=None,
+)
+
+if file_type == "png" or file_type == "png/jpg":
+    st.session_state._file_type = file_type
+    st.session_state._update_logger = st.file_uploader(
+        "Choose only jpg, png of pdf file", type=["jpg", "png", "pdf"]
+    )
+else:
+    st.session_state._file_type = None
+    st.session_state._update_logger = None
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-file_type = st.radio(
-    "Select the type of file you want to upload",
-    ["pdf", "png", "jpg", "None"],
-    index=None
-)
-
-if file_type == "png" or file_type == "jpg" or file_type == "pdf":
-    st.session_state.file_type = file_type
-    uploaded_file = st.file_uploader(
-        "Choose only jpg, png of pdf file", type=["jpg", "png", "pdf"])
-else:
-    st.session_state.file_type = None
-
 if prompt := st.chat_input("What is up?"):
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    if uploaded_file is not None:
-        bytes_data = uploaded_file.getvalue()
+    if st.session_state._update_logger is not None:
+        bytes_data = st.session_state._update_logger.getvalue()
 
     with st.chat_message("assistant"):
-        response = st.write_stream(
-            agent.get_stream_response(st.session_state.messages))
+        response = st.write_stream(agent.get_stream_response(st.session_state.messages))
 
-    st.session_state.messages.append(
-        {"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": response})
 
     # if __name__ == "__main__":
     #     config = Config("config.yaml")

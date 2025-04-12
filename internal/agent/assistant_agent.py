@@ -31,22 +31,22 @@ class Agent:
         yield messages
 
     def set_text_message(self, content: str, source: str):
-        return TextMessage(
-            content=content,
-            source=source
-        )
+        return TextMessage(content=content, source=source)
 
     def set_history_messages(self, history: list):
         history_messages = []
         for h in history:
-            history_messages.append(self.set_text_message(
-                h["content"], h["role"]))
+            history_messages.append(self.set_text_message(h["content"], h["role"]))
         return history_messages
 
     async def assistant_run(self) -> None:
         response = await self.agent.on_messages(
-            [TextMessage(
-                content="What is the capital of Taiwan? Cloud you interduce the city?", source="user")],
+            [
+                TextMessage(
+                    content="What is the capital of Taiwan? Cloud you interduce the city?",
+                    source="user",
+                )
+            ],
             cancellation_token=CancellationToken(),
         )
         print(response)
@@ -54,8 +54,7 @@ class Agent:
     async def assistant_run_stream(self, msg: str) -> None:
         await Console(
             self.agent.on_messages_stream(
-                [TextMessage(
-                    content=msg, source="user")],
+                [TextMessage(content=msg, source="user")],
                 cancellation_token=CancellationToken(),
             ),
             output_stats=True,  # Enable stats printing.
@@ -70,5 +69,5 @@ class Agent:
         ):
             if isinstance(message, Response):
                 yield message.chat_message.content
-            elif hasattr(message, 'content'):
+            elif hasattr(message, "content"):
                 yield message.content
