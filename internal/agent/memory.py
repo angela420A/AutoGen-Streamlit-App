@@ -11,11 +11,22 @@ class Memory:
         self.config()
 
     async def config(self):
-        await self.memory.add(MemoryContent(content="Return a clear and well-structured sentence.", mime_type=MemoryMimeType.TEXT))
-        await self.memory.add(MemoryContent(content="Respond only in English.", mime_type=MemoryMimeType.TEXT))
+        await self.memory.add(
+            MemoryContent(
+                content="Return a clear and well-structured sentence.",
+                mime_type=MemoryMimeType.TEXT,
+            )
+        )
+        await self.memory.add(
+            MemoryContent(
+                content="Respond only in English.", mime_type=MemoryMimeType.TEXT
+            )
+        )
 
     def get_memory(self):
         return self.memory
 
     async def add_memory(self, new_memory):
-        await self.memory.add(MemoryContent(content=new_memory, mime_type=MemoryMimeType.TEXT))
+        await self.memory.add(
+            MemoryContent(content=new_memory, mime_type=MemoryMimeType.TEXT)
+        )

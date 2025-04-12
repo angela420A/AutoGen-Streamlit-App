@@ -24,11 +24,9 @@ if prompt := st.chat_input("What is up?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("assistant"):
-        response = st.write_stream(
-            agent.get_stream_response(st.session_state.messages))
+        response = st.write_stream(agent.get_stream_response(st.session_state.messages))
 
-    st.session_state.messages.append(
-        {"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": response})
 
     # if __name__ == "__main__":
     #     config = Config("config.yaml")
