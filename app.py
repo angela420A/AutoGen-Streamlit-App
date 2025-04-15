@@ -21,14 +21,18 @@ if "messages" not in st.session_state:
 
 file_type = st.radio(
     "Select the type of file you want to upload",
-    ["pdf", "png/jpg", "None"],
+    # ["Image", "PDF", "None"],
+    ["Image", "None"],
     index=None,
 )
 
-if file_type == "png" or file_type == "png/jpg":
+# if file_type == "PDF" or file_type == "Image":
+if file_type == "Image":
     st.session_state._file_type = file_type
     st.session_state._update_logger = st.file_uploader(
-        "Choose only jpg, png of pdf file", type=["jpg", "png", "pdf"]
+        "Choose only jpg, png of pdf file",
+        # type=["jpg", "png", "pdf"],
+        type=["jpg", "png"],
     )
 else:
     st.session_state._file_type = None
@@ -46,7 +50,13 @@ if prompt := st.chat_input("What is up?"):
         bytes_data = st.session_state._update_logger.getvalue()
 
     with st.chat_message("assistant"):
-        response = st.write_stream(agent.get_stream_response(st.session_state.messages))
+        response = st.write_stream(
+            agent.get_stream_response(
+                st.session_state.messages,
+                st.session_state._file_type,
+                st.session_state._update_logger,
+            )
+        )
 
     st.session_state.messages.append({"role": "assistant", "content": response})
 

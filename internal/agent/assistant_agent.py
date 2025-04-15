@@ -1,6 +1,6 @@
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.base import Response
-from autogen_agentchat.messages import StructuredMessage, TextMessage
+from autogen_agentchat.messages import MultiModalMessage, StructuredMessage, TextMessage
 from autogen_agentchat.ui import Console
 from autogen_core import CancellationToken
 from dotenv import load_dotenv
@@ -30,13 +30,10 @@ class Agent:
         messages = await self.agent._model_context.get_messages()
         yield messages
 
-    def set_text_message(self, content: str, source: str):
-        return TextMessage(content=content, source=source)
-
     def set_history_messages(self, history: list):
         history_messages = []
         for h in history:
-            history_messages.append(self.set_text_message(h["content"], h["role"]))
+            history_messages.append(TextMessage(content=h["content"], source=h["role"]))
         return history_messages
 
     async def assistant_run(self) -> None:
@@ -60,8 +57,11 @@ class Agent:
             output_stats=True,  # Enable stats printing.
         )
 
-    async def get_stream_response(self, sessiion: list):
+    async def get_stream_response(self, sessiion: list, file_type: str, file_content):
         history = self.set_history_messages(sessiion)
+
+        if file_type != None:
+            history.append(MultiModalMessage())
 
         async for message in self.agent.on_messages_stream(
             history,
