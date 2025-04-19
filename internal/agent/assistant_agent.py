@@ -1,8 +1,11 @@
+from io import BytesIO
+
+import PIL
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.base import Response
 from autogen_agentchat.messages import MultiModalMessage, StructuredMessage, TextMessage
 from autogen_agentchat.ui import Console
-from autogen_core import CancellationToken
+from autogen_core import CancellationToken, Image
 from dotenv import load_dotenv
 
 from internal.agent.memory import Memory
@@ -57,11 +60,25 @@ class Agent:
             output_stats=True,  # Enable stats printing.
         )
 
-    async def get_stream_response(self, sessiion: list, file_type: str, file_content):
+    async def get_stream_response(
+        self, sessiion: list, new_prompt: str, file_type: str, file_content: bytes
+    ):
         history = self.set_history_messages(sessiion)
 
-        if file_type != None:
-            history.append(MultiModalMessage())
+        if file_type == "Image":
+            pil_image = PIL.Image.open(BytesIO(file_content))
+            img = Image(pil_image)
+            history.append(
+                MultiModalMessage(
+                    content=[
+                        new_prompt,
+                        img,
+                    ],
+                    source="user",
+                )
+            )
+        else:
+            history.append(TextMessage(content=new_prompt, source="user"))
 
         async for message in self.agent.on_messages_stream(
             history,

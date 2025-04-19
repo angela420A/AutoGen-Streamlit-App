@@ -1,7 +1,9 @@
 import asyncio
 from io import BytesIO
 
+import PIL
 import streamlit as st
+from autogen_core import Image
 from autogen_core.models import UserMessage
 
 from internal.agent.assistant_agent import Agent
@@ -15,6 +17,7 @@ st.title("Erhol Bot")
 
 st.session_state._file_type = None
 st.session_state._update_logger = None
+st.session_state._bytes_data = None
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -44,20 +47,28 @@ for message in st.session_state.messages:
 
 if prompt := st.chat_input("What is up?"):
     st.chat_message("user").markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    # st.session_state.messages.append({"role": "user", "content": prompt})
 
     if st.session_state._update_logger is not None:
-        bytes_data = st.session_state._update_logger.getvalue()
+        st.session_state._bytes_data = st.session_state._update_logger.getvalue()
+        # if st.session_state._file_type == "Image":
+        #     image = PIL.Image.open(BytesIO(bytes_data))
+        #     img = Image(image)
+        #     st.session_state.messages.append({"role": "user", "content": img})
+        # if st.session_state._file_type == "PDF":
+        #     pdf = BytesIO(bytes_data)
 
     with st.chat_message("assistant"):
         response = st.write_stream(
             agent.get_stream_response(
                 st.session_state.messages,
+                prompt,
                 st.session_state._file_type,
-                st.session_state._update_logger,
+                st.session_state._bytes_data,
             )
         )
 
+    st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": response})
 
     # if __name__ == "__main__":
