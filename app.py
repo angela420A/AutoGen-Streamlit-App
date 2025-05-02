@@ -62,11 +62,27 @@ if st.session_state is None:
     )
     st.stop()
 
-
 # --- UI and Chat Logic ---
+
 if st.button("Get Momory Context"):
     st.write_stream(get_momory_context())
 
+option_map = {0: ":material/image:", 1: ":material/description:", 2: ":material/close:"}
+selection = st.pills(
+    "Select the file type to upload",
+    options=option_map.keys(),
+    format_func=lambda option: option_map[option],
+    selection_mode="single",
+)
+
+if selection == 0:
+    uploaded_files = st.file_uploader(
+        "Choose a image file", accept_multiple_files=False, type=["jpg", "jpeg", "png"]
+    )
+elif selection == 1:
+    uploaded_files = st.file_uploader(
+        "Choose a pdf file", accept_multiple_files=False, type="pdf"
+    )
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
