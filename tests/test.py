@@ -6,9 +6,9 @@ import streamlit as st
 from autogen_core import Image
 from autogen_core.models import UserMessage
 
-from internal.agent.assistant_agent import Agent
-from internal.agent.testing_function import TestFunction
-from internal.config.config import Config
+from src.agent.assistant_agent import Agent
+from tests.src.testing_function import TestFunction
+from utils import Config
 
 st.title("Erhol Bot")
 

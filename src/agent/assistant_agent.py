@@ -8,7 +8,7 @@ from autogen_agentchat.ui import Console
 from autogen_core import CancellationToken, Image
 from dotenv import load_dotenv
 
-from internal.agent.memory import Memory
+from utils import Memory
 
 load_dotenv()
 
