@@ -37,41 +37,6 @@ class Agent:
             system_message="You ara an assistant that helps the user to find the information they need.",
         )
 
-    def set_history_messages(self, history: list):
-        history_messages = []
-        for h in history:
-            history_messages.append(TextMessage(content=h["content"], source=h["role"]))
-        return history_messages
-
-    async def get_stream_response(
-        self, sessiion: list, new_prompt: str, file_type: str, file_content: bytes
-    ):
-        history = self.set_history_messages(sessiion)
-
-        if file_type == "Image":
-            pil_image = PIL.Image.open(BytesIO(file_content))
-            img = Image(pil_image)
-            history.append(
-                MultiModalMessage(
-                    content=[
-                        new_prompt,
-                        img,
-                    ],
-                    source="user",
-                )
-            )
-        else:
-            history.append(TextMessage(content=new_prompt, source="user"))
-
-        async for message in self.agent.on_messages_stream(
-            history,
-            cancellation_token=CancellationToken(),
-        ):
-            if isinstance(message, Response):
-                yield message.chat_message.content
-            elif hasattr(message, "content"):
-                yield message.content
-
     async def response_memory_testing(self, new_message: str):
         msg = [TextMessage(content=new_message, source="user")]
 
