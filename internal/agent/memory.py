@@ -8,9 +8,7 @@ class Memory:
     def __init__(self):
         self.memory = ListMemory()
 
-        self.config()
-
-    async def config(self):
+    async def async_init(self):
         await self.memory.add(
             MemoryContent(
                 content="Return a clear and well-structured sentence.",

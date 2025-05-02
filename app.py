@@ -7,39 +7,66 @@ from autogen_core import Image
 from autogen_core.models import UserMessage
 
 from internal.agent.assistant_agent import Agent
+from internal.agent.testing_function import TestFunction
 from internal.config.config import Config
 
-config = Config("config.yaml")
-az_model_client = config.get_azure_model_client()
-agent = Agent(az_model_client)
+
+# Help function to get or create the event loop
+def get_or_create_eventloop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return asyncio.get_event_loop()
+        raise ex  # Re-raise other RuntimeError
+
+
+async def initialize_agent():
+    config = Config("config.yaml")
+    az_model_client = config.get_azure_model_client()
+    agent_instance = Agent(az_model_client)
+    await agent_instance.async_init()
+    return agent_instance
+
+
+async def get_momory_context():
+    if st.session_state.agent is None:
+        st.error("You don't have any agent initialized.")
+        st.stop()
+    context = await st.session_state.agent.agent._model_context.get_messages()
+    yield context
+
 
 st.title("Erhol Bot")
 
-st.session_state._file_type = None
-st.session_state._update_logger = None
-st.session_state._bytes_data = None
+# Set values
+default_values = {"agent": None, "messages": []}
+for key, val in default_values.items():
+    if key not in st.session_state:
+        st.session_state[key] = val
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if st.session_state.agent is None:
+    with st.spinner("Initializing Agent . . ."):
+        try:
+            loop = get_or_create_eventloop()
+            st.session_state.agent = loop.run_until_complete(initialize_agent())
+        except Exception as e:
+            st.error(f"Fatal Error: Could not initialize agent: {e}")
+            st.stop()
 
-file_type = st.radio(
-    "Select the type of file you want to upload",
-    # ["Image", "PDF", "None"],
-    ["Image", "None"],
-    index=None,
-)
-
-# if file_type == "PDF" or file_type == "Image":
-if file_type == "Image":
-    st.session_state._file_type = file_type
-    st.session_state._update_logger = st.file_uploader(
-        "Choose only jpg, png of pdf file",
-        # type=["jpg", "png", "pdf"],
-        type=["jpg", "png"],
+if st.session_state is None:
+    st.error(
+        f"Agent initialization failed after attempt. Please check logs or restart."
     )
-else:
-    st.session_state._file_type = None
-    st.session_state._update_logger = None
+    st.stop()
+
+
+# --- UI and Chat Logic ---
+if st.button("Get Momory Context"):
+    st.write_stream(get_momory_context())
+
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -47,38 +74,11 @@ for message in st.session_state.messages:
 
 if prompt := st.chat_input("What is up?"):
     st.chat_message("user").markdown(prompt)
-    # st.session_state.messages.append({"role": "user", "content": prompt})
-
-    if st.session_state._update_logger is not None:
-        st.session_state._bytes_data = st.session_state._update_logger.getvalue()
-        # if st.session_state._file_type == "Image":
-        #     image = PIL.Image.open(BytesIO(bytes_data))
-        #     img = Image(image)
-        #     st.session_state.messages.append({"role": "user", "content": img})
-        # if st.session_state._file_type == "PDF":
-        #     pdf = BytesIO(bytes_data)
 
     with st.chat_message("assistant"):
         response = st.write_stream(
-            agent.get_stream_response(
-                st.session_state.messages,
-                prompt,
-                st.session_state._file_type,
-                st.session_state._bytes_data,
-            )
+            st.session_state.agent.response_memory_testing(prompt)
         )
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": response})
-
-    # if __name__ == "__main__":
-    #     config = Config("config.yaml")
-    #     az_model_client = config.get_azure_model_client()
-    #     agent = Agent(az_model_client)
-    #     asyncio.run(agent.assistant_run_stream("What is the capital of Taiwan?"))
-
-    #     async def consume_memory_context():
-    #         async for context in agent.get_memory_context():
-    #             print(context)
-
-    #     asyncio.run(consume_memory_context())

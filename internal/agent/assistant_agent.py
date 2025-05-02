@@ -18,10 +18,18 @@ class Agent:
         self.model_client = model_client
         self.agent = None
         self.memory = Memory()
+        self._initicalized = False
 
-        self.assistant_agent()
+    async def async_init(self):
+        if self._initicalized:
+            return
+        await self.memory.async_init()
+        self._setup_assistant_agent()
+        self._initicalized = True
 
-    def assistant_agent(self):
+    def _setup_assistant_agent(self):
+        if self.agent is not None:
+            return
         self.agent = AssistantAgent(
             name="assistant",
             model_client=self.model_client,
@@ -29,36 +37,11 @@ class Agent:
             system_message="You ara an assistant that helps the user to find the information they need.",
         )
 
-    async def get_memory_context(self):
-        messages = await self.agent._model_context.get_messages()
-        yield messages
-
     def set_history_messages(self, history: list):
         history_messages = []
         for h in history:
             history_messages.append(TextMessage(content=h["content"], source=h["role"]))
         return history_messages
-
-    async def assistant_run(self) -> None:
-        response = await self.agent.on_messages(
-            [
-                TextMessage(
-                    content="What is the capital of Taiwan? Cloud you interduce the city?",
-                    source="user",
-                )
-            ],
-            cancellation_token=CancellationToken(),
-        )
-        print(response)
-
-    async def assistant_run_stream(self, msg: str) -> None:
-        await Console(
-            self.agent.on_messages_stream(
-                [TextMessage(content=msg, source="user")],
-                cancellation_token=CancellationToken(),
-            ),
-            output_stats=True,  # Enable stats printing.
-        )
 
     async def get_stream_response(
         self, sessiion: list, new_prompt: str, file_type: str, file_content: bytes
@@ -88,3 +71,11 @@ class Agent:
                 yield message.chat_message.content
             elif hasattr(message, "content"):
                 yield message.content
+
+    async def response_memory_testing(self, new_message: str):
+        msg = [TextMessage(content=new_message, source="user")]
+
+        response = await self.agent.on_messages(
+            msg, cancellation_token=CancellationToken()
+        )
+        yield response.chat_message.content
