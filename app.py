@@ -39,7 +39,7 @@ async def get_momory_context():
     yield context
 
 
-st.title("Erhol Bot")
+st.title("AutoGen-Streamlit-AgentChat")
 
 # Set values
 default_values = {"agent": None, "messages": []}
