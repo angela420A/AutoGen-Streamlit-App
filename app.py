@@ -56,7 +56,7 @@ if st.session_state.agent is None:
             st.error(f"Fatal Error: Could not initialize agent: {e}")
             st.stop()
 
-if st.session_state is None:
+if st.session_state.agent is None:
     st.error(
         f"Agent initialization failed after attempt. Please check logs or restart."
     )
@@ -77,7 +77,7 @@ selection = st.pills(
 
 if selection == 0:
     uploaded_files = st.file_uploader(
-        "Choose a image file", accept_multiple_files=False, type=["jpg", "jpeg", "png"]
+        "Choose a image file", accept_multiple_files=True, type=["jpg", "jpeg", "png"]
     )
 elif selection == 1:
     uploaded_files = st.file_uploader(
@@ -91,10 +91,20 @@ for message in st.session_state.messages:
 if prompt := st.chat_input("What is up?"):
     st.chat_message("user").markdown(prompt)
 
-    with st.chat_message("assistant"):
-        response = st.write_stream(
-            st.session_state.agent.response_memory_testing(prompt)
-        )
+    if selection == 0:
+        imgs_byte_data = []
+        for img in uploaded_files:
+            imgs_byte_data.append(img.getvalue())
+
+        with st.chat_message("assistant"):
+            response = st.write_stream(
+                st.session_state.agent.generate_response_with_images(
+                    prompt, imgs_byte_data
+                )
+            )
+    else:
+        with st.chat_message("assistant"):
+            response = st.write_stream(st.session_state.agent.generate_response(prompt))
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": response})
